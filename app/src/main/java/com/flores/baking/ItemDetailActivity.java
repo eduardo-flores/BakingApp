@@ -8,6 +8,11 @@ import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
+import com.flores.baking.data.model.Recipe;
+import com.flores.baking.data.model.Step;
+
+import static com.flores.baking.ItemListActivity.ARG_RECIPE;
+
 /**
  * An activity representing a single Item detail screen. This
  * activity is only used on narrow width devices. On tablet-size devices,
@@ -15,6 +20,9 @@ import androidx.appcompat.widget.Toolbar;
  * in a {@link ItemListActivity}.
  */
 public class ItemDetailActivity extends AppCompatActivity {
+
+    private Recipe mRecipe;
+    private Step mStep;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -27,6 +35,15 @@ public class ItemDetailActivity extends AppCompatActivity {
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
             actionBar.setDisplayHomeAsUpEnabled(true);
+        }
+
+        if (getIntent().hasExtra(ARG_RECIPE)) {
+            mRecipe = (Recipe) getIntent().getSerializableExtra(ARG_RECIPE);
+        }
+
+        if (getIntent().hasExtra(ItemDetailFragment.ARG_ITEM)) {
+            mStep = (Step) getIntent().getSerializableExtra(ItemDetailFragment.ARG_ITEM);
+            setTitle(mStep.getShortDescription());
         }
 
         // savedInstanceState is non-null when there is fragment state
@@ -42,8 +59,7 @@ public class ItemDetailActivity extends AppCompatActivity {
             // Create the detail fragment and add it to the activity
             // using a fragment transaction.
             Bundle arguments = new Bundle();
-            arguments.putSerializable(ItemDetailFragment.ARG_ITEM,
-                    getIntent().getSerializableExtra(ItemDetailFragment.ARG_ITEM));
+            arguments.putSerializable(ItemDetailFragment.ARG_ITEM, mStep);
             ItemDetailFragment fragment = new ItemDetailFragment();
             fragment.setArguments(arguments);
             getSupportFragmentManager().beginTransaction()
@@ -62,7 +78,10 @@ public class ItemDetailActivity extends AppCompatActivity {
             //
             // http://developer.android.com/design/patterns/navigation.html#up-vs-back
             //
-            navigateUpTo(new Intent(this, ItemListActivity.class));
+            Intent intent = new Intent(this, ItemListActivity.class);
+            intent.putExtra(ARG_RECIPE, mRecipe);
+
+            navigateUpTo(intent);
             return true;
         }
         return super.onOptionsItemSelected(item);

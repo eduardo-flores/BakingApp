@@ -7,21 +7,21 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.flores.baking.model.Recipe;
-import com.flores.baking.webservice.WebserviceClient;
+import com.flores.baking.data.RecipeRepository;
+import com.flores.baking.data.model.Recipe;
+import com.flores.baking.data.webservice.RecipeNetworkDataSource;
+import com.flores.baking.viewmodel.MainActivityViewModel;
+import com.flores.baking.viewmodel.MainViewModelFactory;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 import static com.flores.baking.ItemListActivity.ARG_RECIPE;
 
@@ -30,41 +30,48 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
     private SimpleItemRecyclerViewAdapter mAdapter;
+    private List<Recipe> mRecipes;
+    private MainActivityViewModel mViewModel;
+    private ProgressBar mLoadingIndicator;
+    private RecyclerView mRecyclerView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        View recyclerView = findViewById(R.id.card_list_item);
-        assert recyclerView != null;
-        setupRecyclerView((RecyclerView) recyclerView);
 
-    }
+        mLoadingIndicator = findViewById(R.id.pb_loading_indicator);
 
-    private void setupRecyclerView(@NonNull RecyclerView recyclerView) {
+        mRecyclerView = findViewById(R.id.card_list_item);
         mAdapter = new SimpleItemRecyclerViewAdapter(new ArrayList<>(0));
-        getRecipes();
-        recyclerView.setAdapter(mAdapter);
+        mRecyclerView.setAdapter(mAdapter);
+
+        MainViewModelFactory factory = new MainViewModelFactory(RecipeRepository.getInstance(RecipeNetworkDataSource.getInstance()));
+        mViewModel = ViewModelProviders.of(this, factory).get(MainActivityViewModel.class);
+
+        mViewModel.getRecipes().observe(this, recipes -> {
+            mRecipes = recipes;
+            showData();
+        });
     }
 
-    private void getRecipes() {
-        Call<List<Recipe>> call = WebserviceClient.getWebservice().getRecipes();
-        call.enqueue(new Callback<List<Recipe>>() {
-            @Override
-            public void onResponse(Call<List<Recipe>> call, Response<List<Recipe>> response) {
-                Log.d(LOG_TAG, "response code = " + response.code());
-                if (response.isSuccessful()) {
-                    mAdapter.updateValues(response.body());
-                }
-            }
+    private void showData() {
+        mAdapter.updateValues(mRecipes);
+        if (mRecipes != null && mRecipes.size() != 0) showDataView();
+        else showLoading();
+    }
 
-            @Override
-            public void onFailure(Call<List<Recipe>> call, Throwable t) {
-                Log.d(LOG_TAG, t.getMessage());
-            }
+    private void showDataView() {
+        Log.d(LOG_TAG, "showMovieDataView");
+        mLoadingIndicator.setVisibility(View.INVISIBLE);
+        mRecyclerView.setVisibility(View.VISIBLE);
+    }
 
-        });
+    private void showLoading() {
+        Log.d(LOG_TAG, "Loading");
+        mRecyclerView.setVisibility(View.INVISIBLE);
+        mLoadingIndicator.setVisibility(View.VISIBLE);
     }
 
 

@@ -1,4 +1,4 @@
-package com.flores.baking.webservice;
+package com.flores.baking.data.webservice;
 
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;

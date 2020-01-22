@@ -12,8 +12,9 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.flores.baking.model.Recipe;
-import com.flores.baking.model.Step;
+import com.flores.baking.data.model.Ingredient;
+import com.flores.baking.data.model.Recipe;
+import com.flores.baking.data.model.Step;
 
 import java.util.List;
 
@@ -38,7 +39,10 @@ public class ItemListActivity extends AppCompatActivity {
      */
     public static final String ARG_RECIPE = "recipe_object";
 
-    private SimpleItemRecyclerViewAdapter mAdapter;
+    private StepRecyclerViewAdapter mAdapterStep;
+    private RecyclerView mRecyclerViewStep;
+    private IngredientRecyclerViewAdapter mAdapterIngredient;
+    private RecyclerView mRecyclerViewIngredient;
     private Recipe mRecipe;
 
     @Override
@@ -54,8 +58,10 @@ public class ItemListActivity extends AppCompatActivity {
             mTwoPane = true;
         }
 
-        View recyclerView = findViewById(R.id.item_list);
-        assert recyclerView != null;
+        mRecyclerViewStep = findViewById(R.id.item_list);
+
+        mRecyclerViewIngredient = findViewById(R.id.item_list_ingredient);
+
         mRecipe = (Recipe) getIntent().getSerializableExtra(ARG_RECIPE);
         if (savedInstanceState == null) {
             // Create the detail fragment and add it to the activity
@@ -64,19 +70,74 @@ public class ItemListActivity extends AppCompatActivity {
             arguments.putSerializable(ARG_RECIPE, mRecipe);
         }
         setTitle(mRecipe.getName());
-        setupRecyclerView((RecyclerView) recyclerView);
+
+        mAdapterStep = new StepRecyclerViewAdapter(this, mRecipe, mRecipe.getSteps(), mTwoPane);
+        mRecyclerViewStep.setAdapter(mAdapterStep);
+
+        mAdapterIngredient = new IngredientRecyclerViewAdapter(mRecipe.getIngredients());
+        mRecyclerViewIngredient.setAdapter(mAdapterIngredient);
     }
 
     private void setupRecyclerView(@NonNull RecyclerView recyclerView) {
-        mAdapter = new SimpleItemRecyclerViewAdapter(this, mRecipe.getSteps(), mTwoPane);
-        recyclerView.setAdapter(mAdapter);
 
     }
 
-    private static class SimpleItemRecyclerViewAdapter
-            extends RecyclerView.Adapter<SimpleItemRecyclerViewAdapter.ViewHolder> {
+    private static class IngredientRecyclerViewAdapter
+            extends RecyclerView.Adapter<IngredientRecyclerViewAdapter.ViewHolder> {
+
+        private List<Ingredient> mValues;
+
+        IngredientRecyclerViewAdapter(List<Ingredient> items) {
+            mValues = items;
+        }
+
+        public void updateValues(List<Ingredient> ingredients) {
+            if (ingredients != null) {
+                mValues = ingredients;
+                notifyDataSetChanged();
+            }
+        }
+
+        @Override
+        public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+            View view = LayoutInflater.from(parent.getContext())
+                    .inflate(R.layout.item_list_ingredient, parent, false);
+            return new ViewHolder(view);
+        }
+
+        @Override
+        public void onBindViewHolder(final ViewHolder holder, int position) {
+            holder.mIdView.setText(mValues.get(position).getQuantity().toString());
+            holder.mContentView.setText(mValues.get(position).getIngredient());
+
+            holder.itemView.setTag(mValues.get(position));
+        }
+
+        @Override
+        public int getItemCount() {
+            return mValues.size();
+        }
+
+        class ViewHolder extends RecyclerView.ViewHolder {
+            final TextView mIdView;
+            final TextView mContentView;
+
+            ViewHolder(View view) {
+                super(view);
+                mIdView = view.findViewById(R.id.id_text);
+                mContentView = view.findViewById(R.id.content);
+            }
+        }
+    }
+
+
+    private static class StepRecyclerViewAdapter
+            extends RecyclerView.Adapter<StepRecyclerViewAdapter.ViewHolder> {
 
         private final ItemListActivity mParentActivity;
+        private Recipe mRecipe;
+        private final boolean mTwoPane;
+        private List<Step> mValues;
         private final View.OnClickListener mOnClickListener = new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -93,17 +154,18 @@ public class ItemListActivity extends AppCompatActivity {
                     Context context = view.getContext();
                     Intent intent = new Intent(context, ItemDetailActivity.class);
                     intent.putExtra(ItemDetailFragment.ARG_ITEM, item);
+                    intent.putExtra(ARG_RECIPE, mRecipe);
 
                     context.startActivity(intent);
                 }
             }
         };
-        private final boolean mTwoPane;
-        private List<Step> mValues;
 
-        SimpleItemRecyclerViewAdapter(ItemListActivity parent,
-                                      List<Step> items,
-                                      boolean twoPane) {
+        StepRecyclerViewAdapter(ItemListActivity parent,
+                                Recipe recipe,
+                                List<Step> items,
+                                boolean twoPane) {
+            mRecipe = recipe;
             mValues = items;
             mParentActivity = parent;
             mTwoPane = twoPane;

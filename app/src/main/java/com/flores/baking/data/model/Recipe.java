@@ -1,4 +1,4 @@
-package com.flores.baking.model;
+package com.flores.baking.data.model;
 
 import java.io.Serializable;
 import java.util.ArrayList;

@@ -1,6 +1,6 @@
-package com.flores.baking.webservice;
+package com.flores.baking.data.webservice;
 
-import com.flores.baking.model.Recipe;
+import com.flores.baking.data.model.Recipe;
 
 import java.util.List;
 
