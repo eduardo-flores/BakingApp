@@ -1,7 +1,5 @@
 package com.flores.baking;
 
-import android.app.Activity;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.media.session.MediaSessionCompat;
@@ -32,7 +30,6 @@ import com.google.android.exoplayer2.trackselection.TrackSelector;
 import com.google.android.exoplayer2.ui.SimpleExoPlayerView;
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
 import com.google.android.exoplayer2.util.Util;
-import com.google.android.material.appbar.CollapsingToolbarLayout;
 
 /**
  * A fragment representing a single Item detail screen.
@@ -68,12 +65,6 @@ public class ItemDetailFragment extends Fragment implements ExoPlayer.EventListe
         assert getArguments() != null;
         if (getArguments().containsKey(ARG_ITEM)) {
             mItem = (Step) getArguments().getSerializable(ARG_ITEM);
-
-            Activity activity = this.getActivity();
-            CollapsingToolbarLayout appBarLayout = (CollapsingToolbarLayout) activity.findViewById(R.id.toolbar_layout);
-            if (appBarLayout != null) {
-                appBarLayout.setTitle(mItem.getShortDescription());
-            }
         }
     }
 
@@ -87,10 +78,6 @@ public class ItemDetailFragment extends Fragment implements ExoPlayer.EventListe
 
             // Initialize the player view.
             mPlayerView = (SimpleExoPlayerView) rootView.findViewById(R.id.playerView);
-
-            // Load the question mark as the background image until the user answers the question.
-            mPlayerView.setDefaultArtwork(BitmapFactory.decodeResource
-                    (getResources(), R.drawable.question_mark));
 
             // Initialize the Media Session.
             initializeMediaSession();

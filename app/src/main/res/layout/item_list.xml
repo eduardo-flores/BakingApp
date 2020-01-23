@@ -68,7 +68,7 @@
             app:layout_constraintTop_toBottomOf="@+id/txt_label_steps"
             app:layout_constraintVertical_chainStyle="spread"
             tools:context="com.flores.baking.ItemListActivity"
-            tools:listitem="@layout/item_list_content" />
+            tools:listitem="@layout/item_list_step" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

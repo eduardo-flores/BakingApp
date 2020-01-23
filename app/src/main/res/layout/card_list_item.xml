@@ -5,7 +5,6 @@
     android:id="@+id/card_list_item"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_marginLeft="16dp"
-    android:layout_marginRight="16dp"
+    android:padding="@dimen/text_margin_small"
     app:layoutManager="LinearLayoutManager"
     tools:listitem="@layout/card_list_content" />

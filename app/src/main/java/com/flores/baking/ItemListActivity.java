@@ -16,6 +16,7 @@ import com.flores.baking.data.model.Ingredient;
 import com.flores.baking.data.model.Recipe;
 import com.flores.baking.data.model.Step;
 
+import java.text.DecimalFormat;
 import java.util.List;
 
 /**
@@ -91,13 +92,6 @@ public class ItemListActivity extends AppCompatActivity {
             mValues = items;
         }
 
-        public void updateValues(List<Ingredient> ingredients) {
-            if (ingredients != null) {
-                mValues = ingredients;
-                notifyDataSetChanged();
-            }
-        }
-
         @Override
         public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
             View view = LayoutInflater.from(parent.getContext())
@@ -107,8 +101,11 @@ public class ItemListActivity extends AppCompatActivity {
 
         @Override
         public void onBindViewHolder(final ViewHolder holder, int position) {
-            holder.mIdView.setText(mValues.get(position).getQuantity().toString());
-            holder.mContentView.setText(mValues.get(position).getIngredient());
+            DecimalFormat formatter = (DecimalFormat) DecimalFormat.getInstance();
+            formatter.applyPattern("#,###,##0.#");
+            holder.mQuantity.setText(formatter.format(mValues.get(position).getQuantity()));
+            holder.mMeasure.setText(mValues.get(position).getMeasure());
+            holder.mIngredient.setText(mValues.get(position).getIngredient());
 
             holder.itemView.setTag(mValues.get(position));
         }
@@ -119,13 +116,15 @@ public class ItemListActivity extends AppCompatActivity {
         }
 
         class ViewHolder extends RecyclerView.ViewHolder {
-            final TextView mIdView;
-            final TextView mContentView;
+            final TextView mQuantity;
+            final TextView mMeasure;
+            final TextView mIngredient;
 
             ViewHolder(View view) {
                 super(view);
-                mIdView = view.findViewById(R.id.id_text);
-                mContentView = view.findViewById(R.id.content);
+                mQuantity = view.findViewById(R.id.tv_quantity);
+                mMeasure = view.findViewById(R.id.tv_measure);
+                mIngredient = view.findViewById(R.id.tv_ingredient);
             }
         }
     }
@@ -181,13 +180,12 @@ public class ItemListActivity extends AppCompatActivity {
         @Override
         public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
             View view = LayoutInflater.from(parent.getContext())
-                    .inflate(R.layout.item_list_content, parent, false);
+                    .inflate(R.layout.item_list_step, parent, false);
             return new ViewHolder(view);
         }
 
         @Override
         public void onBindViewHolder(final ViewHolder holder, int position) {
-            holder.mIdView.setText(mValues.get(position).getId().toString());
             holder.mContentView.setText(mValues.get(position).getShortDescription());
 
             holder.itemView.setTag(mValues.get(position));
@@ -200,12 +198,10 @@ public class ItemListActivity extends AppCompatActivity {
         }
 
         class ViewHolder extends RecyclerView.ViewHolder {
-            final TextView mIdView;
             final TextView mContentView;
 
             ViewHolder(View view) {
                 super(view);
-                mIdView = view.findViewById(R.id.id_text);
                 mContentView = view.findViewById(R.id.content);
             }
         }

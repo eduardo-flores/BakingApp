@@ -4,8 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_marginLeft="16dp"
-    android:layout_marginRight="16dp"
+    android:layout_marginEnd="16dp"
     android:baselineAligned="false"
     android:divider="?android:attr/dividerHorizontal"
     android:orientation="horizontal"
@@ -87,7 +86,7 @@
                 app:layout_constraintTop_toBottomOf="@+id/txt_label_steps"
                 app:layout_constraintVertical_chainStyle="spread"
                 tools:context="com.flores.baking.ItemListActivity"
-                tools:listitem="@layout/item_list_content" />
+                tools:listitem="@layout/item_list_step" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 

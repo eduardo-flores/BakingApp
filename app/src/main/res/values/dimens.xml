@@ -8,4 +8,5 @@
     <dimen name="text_margin_small">8dp</dimen>
     <dimen name="text_margin_large">32dp</dimen>
     <dimen name="text_size_small">12sp</dimen>
+    <dimen name="border_corners">4dp</dimen>
 </resources>
