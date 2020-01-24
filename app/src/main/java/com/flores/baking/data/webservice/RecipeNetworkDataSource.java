@@ -1,18 +1,3 @@
-/*
- * Copyright (C) 2017 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package com.flores.baking.data.webservice;
 
 import android.appwidget.AppWidgetManager;
@@ -20,6 +5,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
@@ -42,8 +28,8 @@ public class RecipeNetworkDataSource {
     // For Singleton instantiation
     private static final Object LOCK = new Object();
     private static RecipeNetworkDataSource sInstance;
-    private AppWidgetManager appWidgetManager;
-    private int[] appWidgetIds;
+    private final AppWidgetManager appWidgetManager;
+    private final int[] appWidgetIds;
 
     private final MutableLiveData<List<Recipe>> mRecipeList;
 
@@ -80,7 +66,7 @@ public class RecipeNetworkDataSource {
         Call<List<Recipe>> call = WebserviceClient.getWebservice().getRecipes();
         call.enqueue(new Callback<List<Recipe>>() {
             @Override
-            public void onResponse(Call<List<Recipe>> call, Response<List<Recipe>> response) {
+            public void onResponse(@NonNull Call<List<Recipe>> call, @NonNull Response<List<Recipe>> response) {
                 Log.d(LOG_TAG, "response code = " + response.code());
                 if (response.isSuccessful()) {
                     mRecipeList.postValue(response.body());
@@ -90,7 +76,7 @@ public class RecipeNetworkDataSource {
             }
 
             @Override
-            public void onFailure(Call<List<Recipe>> call, Throwable t) {
+            public void onFailure(@NonNull Call<List<Recipe>> call, @NonNull Throwable t) {
                 Log.d(LOG_TAG, t.getMessage() != null ? t.getMessage() : "onFailure");
             }
 

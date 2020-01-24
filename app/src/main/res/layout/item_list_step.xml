@@ -9,10 +9,10 @@
     android:padding="@dimen/text_margin_small">
 
     <ImageView
-        android:id="@+id/iv_preparation"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_vertical"
+        android:contentDescription="@string/step_icon"
         android:src="@drawable/ic_container" />
 
     <TextView

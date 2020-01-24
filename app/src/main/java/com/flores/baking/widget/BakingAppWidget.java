@@ -17,7 +17,7 @@ import com.flores.baking.R;
 public class BakingAppWidget extends AppWidgetProvider {
     private static final String LOG_TAG = BakingAppWidget.class.getSimpleName();
 
-    static void updateAppWidget(Context context, AppWidgetManager appWidgetManager, int appWidgetId) {
+    private static void updateAppWidget(Context context, AppWidgetManager appWidgetManager, int appWidgetId) {
         Log.d(LOG_TAG, "updateAppWidget");
 
         // Construct the RemoteViews object

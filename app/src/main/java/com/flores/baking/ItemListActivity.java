@@ -42,12 +42,6 @@ public class ItemListActivity extends AppCompatActivity {
      */
     public static final String ARG_RECIPE = "recipe_object";
 
-    private StepRecyclerViewAdapter mAdapterStep;
-    private RecyclerView mRecyclerViewStep;
-    private IngredientRecyclerViewAdapter mAdapterIngredient;
-    private RecyclerView mRecyclerViewIngredient;
-    private Recipe mRecipe;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -61,39 +55,38 @@ public class ItemListActivity extends AppCompatActivity {
             mTwoPane = true;
         }
 
-        mRecyclerViewStep = findViewById(R.id.item_list);
+        RecyclerView mRecyclerViewStep = findViewById(R.id.item_list);
 
-        mRecyclerViewIngredient = findViewById(R.id.item_list_ingredient);
+        RecyclerView mRecyclerViewIngredient = findViewById(R.id.item_list_ingredient);
 
-        mRecipe = (Recipe) getIntent().getSerializableExtra(ARG_RECIPE);
+        Recipe mRecipe = (Recipe) getIntent().getSerializableExtra(ARG_RECIPE);
+
+        if (mRecipe == null) return;
         if (savedInstanceState == null) {
             // Create the detail fragment and add it to the activity
             // using a fragment transaction.
             Bundle arguments = new Bundle();
             arguments.putSerializable(ARG_RECIPE, mRecipe);
         }
-        setTitle(mRecipe != null ? mRecipe.getName() : "");
+        setTitle(mRecipe.getName());
 
-        mAdapterStep = new StepRecyclerViewAdapter(this, mRecipe, mRecipe.getSteps(), mTwoPane);
+        StepRecyclerViewAdapter mAdapterStep = new StepRecyclerViewAdapter(this, mRecipe, mRecipe.getSteps(), mTwoPane);
         mRecyclerViewStep.setAdapter(mAdapterStep);
 
-        mAdapterIngredient = new IngredientRecyclerViewAdapter(mRecipe.getIngredients());
+        IngredientRecyclerViewAdapter mAdapterIngredient = new IngredientRecyclerViewAdapter(mRecipe.getIngredients());
         mRecyclerViewIngredient.setAdapter(mAdapterIngredient);
-    }
-
-    private void setupRecyclerView(@NonNull RecyclerView recyclerView) {
-
     }
 
     private static class IngredientRecyclerViewAdapter
             extends RecyclerView.Adapter<IngredientRecyclerViewAdapter.ViewHolder> {
 
-        private List<Ingredient> mValues;
+        private final List<Ingredient> mValues;
 
         IngredientRecyclerViewAdapter(List<Ingredient> items) {
             mValues = items;
         }
 
+        @NonNull
         @Override
         public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
             View view = LayoutInflater.from(parent.getContext())
@@ -136,16 +129,16 @@ public class ItemListActivity extends AppCompatActivity {
             extends RecyclerView.Adapter<StepRecyclerViewAdapter.ViewHolder> {
 
         private final ItemListActivity mParentActivity;
-        private Recipe mRecipe;
+        private final Recipe mRecipe;
         private final boolean mTwoPane;
-        private List<Step> mValues;
+        private final List<Step> mValues;
         private final View.OnClickListener mOnClickListener = new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Step item = (Step) view.getTag();
+                int position = (int) view.getTag();
                 if (mTwoPane) {
                     Bundle arguments = new Bundle();
-                    arguments.putSerializable(ItemDetailFragment.ARG_ITEM, item);
+                    arguments.putSerializable(ItemDetailFragment.ARG_ITEM, mRecipe.getSteps().get(position));
                     ItemDetailFragment fragment = new ItemDetailFragment();
                     fragment.setArguments(arguments);
                     mParentActivity.getSupportFragmentManager().beginTransaction()
@@ -154,7 +147,7 @@ public class ItemListActivity extends AppCompatActivity {
                 } else {
                     Context context = view.getContext();
                     Intent intent = new Intent(context, ItemDetailActivity.class);
-                    intent.putExtra(ARG_ITEM_POSITION, view.getVerticalScrollbarPosition());
+                    intent.putExtra(ARG_ITEM_POSITION, position);
                     intent.putExtra(ARG_RECIPE, mRecipe);
 
                     context.startActivity(intent);
@@ -172,13 +165,7 @@ public class ItemListActivity extends AppCompatActivity {
             mTwoPane = twoPane;
         }
 
-        public void updateValues(List<Step> steps) {
-            if (steps != null) {
-                mValues = steps;
-                notifyDataSetChanged();
-            }
-        }
-
+        @NonNull
         @Override
         public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
             View view = LayoutInflater.from(parent.getContext())
@@ -190,7 +177,7 @@ public class ItemListActivity extends AppCompatActivity {
         public void onBindViewHolder(final ViewHolder holder, int position) {
             holder.mContentView.setText(mValues.get(position).getShortDescription());
 
-            holder.itemView.setTag(mValues.get(position));
+            holder.itemView.setTag(position);
             holder.itemView.setOnClickListener(mOnClickListener);
         }
 

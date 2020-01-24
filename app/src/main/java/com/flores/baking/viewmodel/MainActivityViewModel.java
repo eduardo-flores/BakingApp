@@ -23,7 +23,7 @@ public class MainActivityViewModel extends ViewModel {
         return mRecipes;
     }
 
-    public void fetchRecipes() {
+    private void fetchRecipes() {
         mRepository.fetchRecipes();
     }
 }

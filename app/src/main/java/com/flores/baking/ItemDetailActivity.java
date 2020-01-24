@@ -54,7 +54,6 @@ public class ItemDetailActivity extends AppCompatActivity implements ExoPlayer.E
     public static final String ARG_ITEM_POSITION = "item_position";
 
     private Recipe mRecipe;
-    private Step mItem;
     private int mItemPosition;
 
     @Override
@@ -64,33 +63,13 @@ public class ItemDetailActivity extends AppCompatActivity implements ExoPlayer.E
 
         if (getIntent().hasExtra(ARG_RECIPE)) {
             mRecipe = (Recipe) getIntent().getSerializableExtra(ARG_RECIPE);
+            assert mRecipe != null;
             setTitle(mRecipe.getName());
         } else return;
 
         mItemPosition = getIntent().getIntExtra(ARG_ITEM_POSITION, 0);
 
-        mItem = mRecipe.getSteps().get(mItemPosition);
-
-        if (mItemPosition == 0) {
-            findViewById(R.id.bt_previous).setVisibility(View.INVISIBLE);
-        } else {
-            findViewById(R.id.bt_previous).setOnClickListener(listener -> {
-                Intent intent = new Intent(getApplicationContext(), ItemDetailActivity.class);
-                intent.putExtra(ARG_ITEM_POSITION, mItemPosition - 1);
-                intent.putExtra(ARG_RECIPE, mRecipe);
-                getApplicationContext().startActivity(intent);
-            });
-        }
-        if (mItemPosition == mRecipe.getSteps().size() - 1) {
-            findViewById(R.id.bt_next).setVisibility(View.INVISIBLE);
-        } else {
-            findViewById(R.id.bt_next).setOnClickListener(listener -> {
-                Intent intent = new Intent(this, ItemDetailActivity.class);
-                intent.putExtra(ARG_ITEM_POSITION, mItemPosition + 1);
-                intent.putExtra(ARG_RECIPE, mRecipe);
-                this.startActivity(intent);
-            });
-        }
+        Step mItem = mRecipe.getSteps().get(mItemPosition);
 
         // savedInstanceState is non-null when there is fragment state
         // saved from previous configurations of this activity
@@ -136,6 +115,29 @@ public class ItemDetailActivity extends AppCompatActivity implements ExoPlayer.E
                 Toast.makeText(this, getString(R.string.video_not_found_error),
                         Toast.LENGTH_SHORT).show();
             }
+        } else {
+
+            if (mItemPosition == 0) {
+                findViewById(R.id.bt_previous).setVisibility(View.INVISIBLE);
+            } else {
+                findViewById(R.id.bt_previous).setOnClickListener(listener -> {
+                    Intent intent = new Intent(getApplicationContext(), ItemDetailActivity.class);
+                    intent.putExtra(ARG_ITEM_POSITION, mItemPosition - 1);
+                    intent.putExtra(ARG_RECIPE, mRecipe);
+                    getApplicationContext().startActivity(intent);
+                });
+            }
+            if (mItemPosition == mRecipe.getSteps().size() - 1) {
+                findViewById(R.id.bt_next).setVisibility(View.INVISIBLE);
+            } else {
+                findViewById(R.id.bt_next).setOnClickListener(listener -> {
+                    Intent intent = new Intent(this, ItemDetailActivity.class);
+                    intent.putExtra(ARG_ITEM_POSITION, mItemPosition + 1);
+                    intent.putExtra(ARG_RECIPE, mRecipe);
+                    this.startActivity(intent);
+                });
+            }
+
         }
     }
 

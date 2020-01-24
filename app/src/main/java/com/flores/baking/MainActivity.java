@@ -10,6 +10,7 @@ import android.view.ViewGroup;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.RecyclerView;
@@ -31,7 +32,6 @@ public class MainActivity extends AppCompatActivity {
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
     private SimpleItemRecyclerViewAdapter mAdapter;
     private List<Recipe> mRecipes;
-    private MainActivityViewModel mViewModel;
     private ProgressBar mLoadingIndicator;
     private RecyclerView mRecyclerView;
 
@@ -48,7 +48,7 @@ public class MainActivity extends AppCompatActivity {
         mRecyclerView.setAdapter(mAdapter);
 
         MainViewModelFactory factory = new MainViewModelFactory(RecipeRepository.getInstance(RecipeNetworkDataSource.getInstance(getApplicationContext())));
-        mViewModel = ViewModelProviders.of(this, factory).get(MainActivityViewModel.class);
+        MainActivityViewModel mViewModel = ViewModelProviders.of(this, factory).get(MainActivityViewModel.class);
 
         mViewModel.getRecipes().observe(this, recipes -> {
             mRecipes = recipes;
@@ -99,6 +99,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
+        @NonNull
         @Override
         public SimpleItemRecyclerViewAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
             View view = LayoutInflater.from(parent.getContext())

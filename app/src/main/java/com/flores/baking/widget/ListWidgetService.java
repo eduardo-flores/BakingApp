@@ -18,7 +18,6 @@ import static com.flores.baking.ItemListActivity.ARG_RECIPE;
 
 public class ListWidgetService extends RemoteViewsService {
 
-    public static final String EXTRA_WIDGET_DATA = "EXTRA_BAKING_APP_RECIPES";
     private static final String LOG_TAG = ListWidgetService.class.getSimpleName();
 
     @Override
@@ -30,9 +29,9 @@ public class ListWidgetService extends RemoteViewsService {
 
     private class ListRemoteViewsFactory implements RemoteViewsFactory {
         private final String LOG_TAG = "ListRemoteViewsFactory";
-        private Context mContext;
+        private final Context mContext;
         private List<Recipe> mRecipes;
-        private RecipeNetworkDataSource mNetworkDataSource;
+        private final RecipeNetworkDataSource mNetworkDataSource;
 
         ListRemoteViewsFactory(Context applicationContext) {
             mNetworkDataSource = RecipeNetworkDataSource.getInstance(applicationContext);
