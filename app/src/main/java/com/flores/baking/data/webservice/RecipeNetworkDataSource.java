@@ -15,12 +15,17 @@
  */
 package com.flores.baking.data.webservice;
 
+import android.appwidget.AppWidgetManager;
+import android.content.ComponentName;
+import android.content.Context;
 import android.util.Log;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
+import com.flores.baking.R;
 import com.flores.baking.data.model.Recipe;
+import com.flores.baking.widget.BakingAppWidget;
 
 import java.util.List;
 
@@ -37,21 +42,25 @@ public class RecipeNetworkDataSource {
     // For Singleton instantiation
     private static final Object LOCK = new Object();
     private static RecipeNetworkDataSource sInstance;
+    private AppWidgetManager appWidgetManager;
+    private int[] appWidgetIds;
 
     private final MutableLiveData<List<Recipe>> mRecipeList;
 
-    private RecipeNetworkDataSource() {
+    private RecipeNetworkDataSource(Context context) {
+        appWidgetManager = AppWidgetManager.getInstance(context);
+        appWidgetIds = appWidgetManager.getAppWidgetIds(new ComponentName(context, BakingAppWidget.class));
         mRecipeList = new MutableLiveData<>();
     }
 
     /**
      * Get the singleton for this class
      */
-    public static RecipeNetworkDataSource getInstance() {
+    public static RecipeNetworkDataSource getInstance(Context context) {
         Log.d(LOG_TAG, "Getting the network data source");
         if (sInstance == null) {
             synchronized (LOCK) {
-                sInstance = new RecipeNetworkDataSource();
+                sInstance = new RecipeNetworkDataSource(context);
                 Log.d(LOG_TAG, "Made new network data source");
             }
         }
@@ -60,6 +69,10 @@ public class RecipeNetworkDataSource {
 
     public LiveData<List<Recipe>> getRecipes() {
         return mRecipeList;
+    }
+
+    public List<Recipe> getRecipesWidget() {
+        return mRecipeList.getValue();
     }
 
     public void fetchRecipes() {
@@ -71,12 +84,14 @@ public class RecipeNetworkDataSource {
                 Log.d(LOG_TAG, "response code = " + response.code());
                 if (response.isSuccessful()) {
                     mRecipeList.postValue(response.body());
+                    //Trigger data update to handle the widgets and force a data refresh
+                    appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetIds, R.id.lv_recipe_widget);
                 }
             }
 
             @Override
             public void onFailure(Call<List<Recipe>> call, Throwable t) {
-                Log.d(LOG_TAG, t.getMessage());
+                Log.d(LOG_TAG, t.getMessage() != null ? t.getMessage() : "onFailure");
             }
 
         });

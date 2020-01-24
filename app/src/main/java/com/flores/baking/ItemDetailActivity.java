@@ -6,6 +6,8 @@ import android.os.Bundle;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -30,6 +32,8 @@ import com.google.android.exoplayer2.ui.SimpleExoPlayerView;
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
 import com.google.android.exoplayer2.util.Util;
 
+import java.util.Objects;
+
 import static com.flores.baking.ItemListActivity.ARG_RECIPE;
 
 /**
@@ -47,8 +51,11 @@ public class ItemDetailActivity extends AppCompatActivity implements ExoPlayer.E
     private MediaSessionCompat mMediaSession;
     private PlaybackStateCompat.Builder mStateBuilder;
 
+    public static final String ARG_ITEM_POSITION = "item_position";
+
     private Recipe mRecipe;
     private Step mItem;
+    private int mItemPosition;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,10 +65,31 @@ public class ItemDetailActivity extends AppCompatActivity implements ExoPlayer.E
         if (getIntent().hasExtra(ARG_RECIPE)) {
             mRecipe = (Recipe) getIntent().getSerializableExtra(ARG_RECIPE);
             setTitle(mRecipe.getName());
-        }
+        } else return;
 
-        if (getIntent().hasExtra(ItemDetailFragment.ARG_ITEM)) {
-            mItem = (Step) getIntent().getSerializableExtra(ItemDetailFragment.ARG_ITEM);
+        mItemPosition = getIntent().getIntExtra(ARG_ITEM_POSITION, 0);
+
+        mItem = mRecipe.getSteps().get(mItemPosition);
+
+        if (mItemPosition == 0) {
+            findViewById(R.id.bt_previous).setVisibility(View.INVISIBLE);
+        } else {
+            findViewById(R.id.bt_previous).setOnClickListener(listener -> {
+                Intent intent = new Intent(getApplicationContext(), ItemDetailActivity.class);
+                intent.putExtra(ARG_ITEM_POSITION, mItemPosition - 1);
+                intent.putExtra(ARG_RECIPE, mRecipe);
+                getApplicationContext().startActivity(intent);
+            });
+        }
+        if (mItemPosition == mRecipe.getSteps().size() - 1) {
+            findViewById(R.id.bt_next).setVisibility(View.INVISIBLE);
+        } else {
+            findViewById(R.id.bt_next).setOnClickListener(listener -> {
+                Intent intent = new Intent(this, ItemDetailActivity.class);
+                intent.putExtra(ARG_ITEM_POSITION, mItemPosition + 1);
+                intent.putExtra(ARG_RECIPE, mRecipe);
+                this.startActivity(intent);
+            });
         }
 
         // savedInstanceState is non-null when there is fragment state
@@ -88,25 +116,26 @@ public class ItemDetailActivity extends AppCompatActivity implements ExoPlayer.E
 
         if (getResources().getBoolean(R.bool.is_landscape)) {
 
-            getSupportActionBar().hide();
+            Objects.requireNonNull(getSupportActionBar()).hide();
 
             // Initialize the player view.
-            mPlayerView = (SimpleExoPlayerView) findViewById(R.id.playerView);
+            mPlayerView = findViewById(R.id.playerView);
 
-            if (mPlayerView != null) {
-                // Initialize the Media Session.
-                initializeMediaSession();
+            if (mItem.getVideoURL() != null && !mItem.getVideoURL().isEmpty()) {
+                if (mPlayerView != null) {
+                    // Initialize the Media Session.
+                    initializeMediaSession();
+                }
+
+                // Initialize the player.
+                initializePlayer(Uri.parse(mItem.getVideoURL()));
+            } else {
+                View videoNotFound = findViewById(R.id.iv_video_not_found);
+                mPlayerView.setVisibility(View.GONE);
+                videoNotFound.setVisibility(View.VISIBLE);
+                Toast.makeText(this, getString(R.string.video_not_found_error),
+                        Toast.LENGTH_SHORT).show();
             }
-
-//TODO: show error message
-//        if (?? == null) {
-//            Toast.makeText(this, getString(R.string.sample_not_found_error),
-//                    Toast.LENGTH_SHORT).show();
-//            return;
-//        }
-
-            // Initialize the player.
-            initializePlayer(Uri.parse(mItem.getVideoURL()));
         }
     }
 

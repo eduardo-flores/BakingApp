@@ -19,6 +19,8 @@ import com.flores.baking.data.model.Step;
 import java.text.DecimalFormat;
 import java.util.List;
 
+import static com.flores.baking.ItemDetailActivity.ARG_ITEM_POSITION;
+
 /**
  * An activity representing a list of Items. This activity
  * has different presentations for handset and tablet-size devices. On
@@ -70,7 +72,7 @@ public class ItemListActivity extends AppCompatActivity {
             Bundle arguments = new Bundle();
             arguments.putSerializable(ARG_RECIPE, mRecipe);
         }
-        setTitle(mRecipe.getName());
+        setTitle(mRecipe != null ? mRecipe.getName() : "");
 
         mAdapterStep = new StepRecyclerViewAdapter(this, mRecipe, mRecipe.getSteps(), mTwoPane);
         mRecyclerViewStep.setAdapter(mAdapterStep);
@@ -152,7 +154,7 @@ public class ItemListActivity extends AppCompatActivity {
                 } else {
                     Context context = view.getContext();
                     Intent intent = new Intent(context, ItemDetailActivity.class);
-                    intent.putExtra(ItemDetailFragment.ARG_ITEM, item);
+                    intent.putExtra(ARG_ITEM_POSITION, view.getVerticalScrollbarPosition());
                     intent.putExtra(ARG_RECIPE, mRecipe);
 
                     context.startActivity(intent);

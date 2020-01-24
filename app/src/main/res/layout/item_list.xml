@@ -1,75 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-        <TextView
-            android:id="@+id/txt_label_ingredients"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/text_margin_large"
-            android:layout_marginTop="@dimen/text_margin_small"
-            android:layout_marginEnd="@dimen/text_margin_small"
-            android:layout_marginBottom="@dimen/text_margin_small"
-            android:focusableInTouchMode="true"
-            android:text="@string/label_ingredients"
-            android:textAllCaps="true"
-            android:textSize="@dimen/text_size_small"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:text="Ingredients" />
-
-        <TextView
-            android:id="@+id/txt_label_steps"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/text_margin_large"
-            android:layout_marginTop="@dimen/text_margin_small"
-            android:layout_marginEnd="@dimen/text_margin_small"
-            android:layout_marginBottom="@dimen/text_margin_small"
-            android:text="@string/label_steps"
-            android:textAllCaps="true"
-            android:textSize="@dimen/text_size_small"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/item_list_ingredient" />
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/item_list_ingredient"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_margin="@dimen/text_margin_small"
-            android:nestedScrollingEnabled="false"
-            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-            app:layout_constraintBottom_toTopOf="@+id/txt_label_steps"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/txt_label_ingredients"
-            tools:context="com.flores.baking.ItemListActivity"
-            tools:listitem="@layout/item_list_ingredient" />
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/item_list"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/text_margin_small"
-            android:layout_marginTop="@dimen/text_margin_small"
-            android:layout_marginEnd="@dimen/text_margin_small"
-            android:nestedScrollingEnabled="false"
-            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/txt_label_steps"
-            app:layout_constraintVertical_chainStyle="spread"
-            tools:context="com.flores.baking.ItemListActivity"
-            tools:listitem="@layout/item_list_step" />
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
+    <include layout="@layout/include_item_list" />
 
 </ScrollView>

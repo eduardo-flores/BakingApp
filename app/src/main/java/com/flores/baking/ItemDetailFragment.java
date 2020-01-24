@@ -8,6 +8,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -42,7 +43,7 @@ public class ItemDetailFragment extends Fragment implements ExoPlayer.EventListe
      * The fragment argument representing the item that this fragment
      * represents.
      */
-    public static final String ARG_ITEM = "item_object";
+    static final String ARG_ITEM = "item_object";
 
     private static final String LOG_TAG = ItemDetailFragment.class.getSimpleName();
     private SimpleExoPlayer mExoPlayer;
@@ -77,20 +78,21 @@ public class ItemDetailFragment extends Fragment implements ExoPlayer.EventListe
             ((TextView) rootView.findViewById(R.id.item_detail)).setText(mItem.getDescription());
 
             // Initialize the player view.
-            mPlayerView = (SimpleExoPlayerView) rootView.findViewById(R.id.playerView);
+            mPlayerView = rootView.findViewById(R.id.playerView);
 
-            // Initialize the Media Session.
-            initializeMediaSession();
+            if (mItem.getVideoURL() != null && !mItem.getVideoURL().isEmpty()) {
+                // Initialize the Media Session.
+                initializeMediaSession();
 
-//TODO: show error message
-//        if (?? == null) {
-//            Toast.makeText(this, getString(R.string.sample_not_found_error),
-//                    Toast.LENGTH_SHORT).show();
-//            return;
-//        }
-
-            // Initialize the player.
-            initializePlayer(Uri.parse(mItem.getVideoURL()));
+                // Initialize the player.
+                initializePlayer(Uri.parse(mItem.getVideoURL()));
+            } else {
+                View videoNotFound = rootView.findViewById(R.id.iv_video_not_found);
+                mPlayerView.setVisibility(View.GONE);
+                videoNotFound.setVisibility(View.VISIBLE);
+                Toast.makeText(requireContext(), getString(R.string.video_not_found_error),
+                        Toast.LENGTH_SHORT).show();
+            }
         }
 
         return rootView;
@@ -158,16 +160,16 @@ public class ItemDetailFragment extends Fragment implements ExoPlayer.EventListe
         }
     }
 
-
     /**
      * Release ExoPlayer.
      */
     private void releasePlayer() {
-        mExoPlayer.stop();
-        mExoPlayer.release();
-        mExoPlayer = null;
+        if (mExoPlayer != null) {
+            mExoPlayer.stop();
+            mExoPlayer.release();
+            mExoPlayer = null;
+        }
     }
-
 
     /**
      * Release the player when the activity is destroyed.
@@ -176,7 +178,7 @@ public class ItemDetailFragment extends Fragment implements ExoPlayer.EventListe
     public void onDestroy() {
         super.onDestroy();
         releasePlayer();
-        mMediaSession.setActive(false);
+        if (mMediaSession != null) mMediaSession.setActive(false);
     }
 
     // ExoPlayer Event Listeners

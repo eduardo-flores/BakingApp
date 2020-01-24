@@ -47,7 +47,7 @@ public class MainActivity extends AppCompatActivity {
         mAdapter = new SimpleItemRecyclerViewAdapter(new ArrayList<>(0));
         mRecyclerView.setAdapter(mAdapter);
 
-        MainViewModelFactory factory = new MainViewModelFactory(RecipeRepository.getInstance(RecipeNetworkDataSource.getInstance()));
+        MainViewModelFactory factory = new MainViewModelFactory(RecipeRepository.getInstance(RecipeNetworkDataSource.getInstance(getApplicationContext())));
         mViewModel = ViewModelProviders.of(this, factory).get(MainActivityViewModel.class);
 
         mViewModel.getRecipes().observe(this, recipes -> {
@@ -92,7 +92,7 @@ public class MainActivity extends AppCompatActivity {
             mValues = items;
         }
 
-        public void updateValues(List<Recipe> recipes) {
+        void updateValues(List<Recipe> recipes) {
             if (recipes != null) {
                 mValues = recipes;
                 notifyDataSetChanged();
