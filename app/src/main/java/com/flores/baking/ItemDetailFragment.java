@@ -38,7 +38,7 @@ import com.google.android.exoplayer2.util.Util;
  * in two-pane mode (on tablets) or a {@link ItemDetailActivity}
  * on handsets.
  */
-class ItemDetailFragment extends Fragment implements ExoPlayer.EventListener {
+public class ItemDetailFragment extends Fragment implements ExoPlayer.EventListener {
     /**
      * The fragment argument representing the item that this fragment
      * represents.

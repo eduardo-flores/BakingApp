@@ -121,10 +121,10 @@ public class ItemDetailActivity extends AppCompatActivity implements ExoPlayer.E
                 findViewById(R.id.bt_previous).setVisibility(View.INVISIBLE);
             } else {
                 findViewById(R.id.bt_previous).setOnClickListener(listener -> {
-                    Intent intent = new Intent(getApplicationContext(), ItemDetailActivity.class);
+                    Intent intent = new Intent(this, ItemDetailActivity.class);
                     intent.putExtra(ARG_ITEM_POSITION, mItemPosition - 1);
                     intent.putExtra(ARG_RECIPE, mRecipe);
-                    getApplicationContext().startActivity(intent);
+                    this.startActivity(intent);
                 });
             }
             if (mItemPosition == mRecipe.getSteps().size() - 1) {

@@ -7,5 +7,4 @@
     <color name="border_color">@color/colorPrimaryDark</color>
     <color name="widget_background">@color/colorPrimaryLight</color>
     <color name="color_player_background">#CC000000</color>
-    <color name="ic_launcher_background">#D9B527</color>
 </resources>

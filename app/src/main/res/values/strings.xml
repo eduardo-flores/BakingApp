@@ -8,4 +8,6 @@
     <string name="bt_next">Next</string>
     <string name="recipe_image">Recipe</string>
     <string name="step_icon">Step icon</string>
+    <string name="player_play_button">Play button</string>
+    <string name="player_pause_button">Pause button</string>
 </resources>
