@@ -1,9 +1,11 @@
 package com.flores.baking;
 
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -32,6 +34,9 @@ import com.google.android.exoplayer2.ui.SimpleExoPlayerView;
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
 import com.google.android.exoplayer2.util.Util;
 
+import static com.flores.baking.ItemDetailActivity.ARG_ITEM_POSITION;
+import static com.flores.baking.ItemListActivity.ARG_RECIPE;
+
 /**
  * A fragment representing a single Item detail screen.
  * This fragment is either contained in a {@link ItemListActivity}
@@ -39,13 +44,17 @@ import com.google.android.exoplayer2.util.Util;
  * on handsets.
  */
 public class ItemDetailFragment extends Fragment implements ExoPlayer.EventListener {
+
+    static final String ARG_ITEM_POSITION_PREVIOUS = "previous_item_position";
+
     /**
      * The fragment argument representing the item that this fragment
      * represents.
      */
     static final String ARG_ITEM = "item_object";
-
+    static final String ARG_ITEM_POSITION_NEXT = "next_item_position";
     private static final String LOG_TAG = ItemDetailFragment.class.getSimpleName();
+
     private SimpleExoPlayer mExoPlayer;
     private SimpleExoPlayerView mPlayerView;
     private MediaSessionCompat mMediaSession;
@@ -74,8 +83,43 @@ public class ItemDetailFragment extends Fragment implements ExoPlayer.EventListe
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.item_detail, container, false);
 
+        //Control navigation buttons
+        View previous = rootView.findViewById(R.id.bt_previous);
+        View next = rootView.findViewById(R.id.bt_next);
+        if (getArguments().containsKey(ARG_ITEM_POSITION_PREVIOUS)) {
+            Log.d(LOG_TAG, "Previous " + getArguments().getInt(ARG_ITEM_POSITION_PREVIOUS));
+            if (previous != null) {
+                previous.setOnClickListener(listener -> {
+                    Intent intent = new Intent(requireContext(), ItemDetailActivity.class);
+                    intent.putExtra(ARG_ITEM_POSITION, getArguments().getInt(ARG_ITEM_POSITION_PREVIOUS));
+                    intent.putExtra(ARG_RECIPE, getArguments().getSerializable(ARG_RECIPE));
+                    requireContext().startActivity(intent);
+                });
+            }
+        } else {
+            if (previous != null) {
+                previous.setVisibility(View.INVISIBLE);
+            }
+        }
+        if (getArguments().containsKey(ARG_ITEM_POSITION_NEXT)) {
+            Log.d(LOG_TAG, "Next " + getArguments().getInt(ARG_ITEM_POSITION_NEXT));
+            if (next != null) {
+                next.setOnClickListener(listener -> {
+                    Intent intent = new Intent(requireContext(), ItemDetailActivity.class);
+                    intent.putExtra(ARG_ITEM_POSITION, getArguments().getInt(ARG_ITEM_POSITION_NEXT));
+                    intent.putExtra(ARG_RECIPE, getArguments().getSerializable(ARG_RECIPE));
+                    requireContext().startActivity(intent);
+                });
+            }
+        } else {
+            if (next != null) {
+                next.setVisibility(View.INVISIBLE);
+            }
+        }
+
         if (mItem != null) {
-            ((TextView) rootView.findViewById(R.id.item_detail)).setText(mItem.getDescription());
+            TextView itemDetail = rootView.findViewById(R.id.item_detail);
+            if (itemDetail != null) itemDetail.setText(mItem.getDescription());
 
             // Initialize the player view.
             mPlayerView = rootView.findViewById(R.id.playerView);
@@ -169,6 +213,7 @@ public class ItemDetailFragment extends Fragment implements ExoPlayer.EventListe
             mExoPlayer.release();
             mExoPlayer = null;
         }
+        if (mMediaSession != null) mMediaSession.setActive(false);
     }
 
     /**
@@ -178,11 +223,9 @@ public class ItemDetailFragment extends Fragment implements ExoPlayer.EventListe
     public void onDestroy() {
         super.onDestroy();
         releasePlayer();
-        if (mMediaSession != null) mMediaSession.setActive(false);
     }
 
     // ExoPlayer Event Listeners
-
 
     @Override
     public void onTimelineChanged(Timeline timeline, @Nullable Object manifest, int reason) {

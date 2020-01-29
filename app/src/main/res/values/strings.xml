@@ -10,4 +10,8 @@
     <string name="step_icon">Step icon</string>
     <string name="player_play_button">Play button</string>
     <string name="player_pause_button">Pause button</string>
+    <string name="toast_favorite_added">Ingredients list added to widget</string>
+    <string name="toast_favorite_deleted">Ingredients deleted from widget</string>
+    <string name="empty_widget">Favorite your recipes to see the ingredient list here.</string>
+    <string name="toast_favorite_error">An error occurred please try again.</string>
 </resources>

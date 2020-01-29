@@ -1,12 +1,17 @@
 package com.flores.baking;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.ColorStateList;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -15,6 +20,9 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.flores.baking.data.model.Ingredient;
 import com.flores.baking.data.model.Recipe;
 import com.flores.baking.data.model.Step;
+import com.flores.baking.provider.BakingContract;
+import com.flores.baking.widget.IngredientsService;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.text.DecimalFormat;
 import java.util.List;
@@ -42,6 +50,8 @@ public class ItemListActivity extends AppCompatActivity {
      */
     public static final String ARG_RECIPE = "recipe_object";
 
+    private Recipe mRecipe;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -59,7 +69,7 @@ public class ItemListActivity extends AppCompatActivity {
 
         RecyclerView mRecyclerViewIngredient = findViewById(R.id.item_list_ingredient);
 
-        Recipe mRecipe = (Recipe) getIntent().getSerializableExtra(ARG_RECIPE);
+        mRecipe = (Recipe) getIntent().getSerializableExtra(ARG_RECIPE);
 
         if (mRecipe == null) return;
         if (savedInstanceState == null) {
@@ -75,7 +85,75 @@ public class ItemListActivity extends AppCompatActivity {
 
         IngredientRecyclerViewAdapter mAdapterIngredient = new IngredientRecyclerViewAdapter(mRecipe.getIngredients());
         mRecyclerViewIngredient.setAdapter(mAdapterIngredient);
+
+        setupFab();
     }
+
+    private void setupFab() {
+        if (mRecipe == null) return;
+        Cursor cursor = getContentResolver().query(BakingContract.IngredientEntry.CONTENT_URI,
+                null,
+                BakingContract.IngredientEntry.COLUMN_RECIPE_NAME + "=?",
+                new String[]{mRecipe.getName()},
+                BakingContract.IngredientEntry._ID);
+
+        FloatingActionButton fab = findViewById(R.id.fab);
+        if (cursor != null && cursor.getCount() > 0) {
+            fab.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.colorAccent)));
+            fab.setOnClickListener(view -> deleteIngredients(mRecipe.getName()));
+            cursor.close();
+        } else {
+            fab.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.colorFabDeactivated)));
+            fab.setOnClickListener(view -> addIngredients(mRecipe.getName(), mRecipe.getIngredients()));
+        }
+    }
+
+    private void deleteIngredients(String name) {
+        int count = getContentResolver().delete(BakingContract.IngredientEntry.CONTENT_URI,
+                BakingContract.IngredientEntry.COLUMN_RECIPE_NAME + "=?",
+                new String[]{name});
+        if (count > 0) {
+            Toast.makeText(this, R.string.toast_favorite_deleted, Toast.LENGTH_SHORT).show();
+            IngredientsService.startActionUpdateWidgets(this);
+            setupFab();
+        } else {
+            Toast.makeText(this, R.string.toast_favorite_error, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+
+    private void addIngredients(String recipeName, List<Ingredient> ingredients) {
+        String ingredientsString = ingredientsListToString(ingredients);
+
+        ContentValues values = new ContentValues();
+        values.put(BakingContract.IngredientEntry.COLUMN_RECIPE_NAME, recipeName);
+        values.put(BakingContract.IngredientEntry.COLUMN_INGREDIENTS, ingredientsString);
+
+        Uri uri = getContentResolver().insert(BakingContract.IngredientEntry.CONTENT_URI, values);
+        if (uri != null) {
+            Toast.makeText(this, R.string.toast_favorite_added, Toast.LENGTH_SHORT).show();
+            IngredientsService.startActionUpdateWidgets(this);
+            setupFab();
+        } else {
+            Toast.makeText(this, R.string.toast_favorite_error, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private String ingredientsListToString(List<Ingredient> ingredients) {
+        StringBuilder ingredientSB = new StringBuilder();
+        DecimalFormat decimalFormat = new DecimalFormat("0.#");
+
+        for (Ingredient ingredient : ingredients) {
+            ingredientSB.append(decimalFormat.format(ingredient.getQuantity()))
+                    .append(" ")
+                    .append(ingredient.getMeasure())
+                    .append(" - ")
+                    .append(ingredient.getIngredient())
+                    .append("\n");
+        }
+        return ingredientSB.toString();
+    }
+
 
     private static class IngredientRecyclerViewAdapter
             extends RecyclerView.Adapter<IngredientRecyclerViewAdapter.ViewHolder> {

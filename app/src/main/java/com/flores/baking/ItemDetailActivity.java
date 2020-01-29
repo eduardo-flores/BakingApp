@@ -1,36 +1,12 @@
 package com.flores.baking;
 
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
-import android.support.v4.media.session.MediaSessionCompat;
-import android.support.v4.media.session.PlaybackStateCompat;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.Toast;
 
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.flores.baking.data.model.Recipe;
-import com.flores.baking.data.model.Step;
-import com.google.android.exoplayer2.DefaultLoadControl;
-import com.google.android.exoplayer2.ExoPlaybackException;
-import com.google.android.exoplayer2.ExoPlayer;
-import com.google.android.exoplayer2.ExoPlayerFactory;
-import com.google.android.exoplayer2.LoadControl;
-import com.google.android.exoplayer2.SimpleExoPlayer;
-import com.google.android.exoplayer2.Timeline;
-import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory;
-import com.google.android.exoplayer2.source.ExtractorMediaSource;
-import com.google.android.exoplayer2.source.MediaSource;
-import com.google.android.exoplayer2.source.TrackGroupArray;
-import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
-import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
-import com.google.android.exoplayer2.trackselection.TrackSelector;
-import com.google.android.exoplayer2.ui.SimpleExoPlayerView;
-import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
-import com.google.android.exoplayer2.util.Util;
 
 import java.util.Objects;
 
@@ -42,14 +18,9 @@ import static com.flores.baking.ItemListActivity.ARG_RECIPE;
  * item details are presented side-by-side with a list of items
  * in a {@link ItemListActivity}.
  */
-public class ItemDetailActivity extends AppCompatActivity implements ExoPlayer.EventListener {
+public class ItemDetailActivity extends AppCompatActivity {
 
     private static final String LOG_TAG = ItemDetailActivity.class.getSimpleName();
-
-    private SimpleExoPlayer mExoPlayer;
-    private SimpleExoPlayerView mPlayerView;
-    private MediaSessionCompat mMediaSession;
-    private PlaybackStateCompat.Builder mStateBuilder;
 
     public static final String ARG_ITEM_POSITION = "item_position";
 
@@ -69,22 +40,19 @@ public class ItemDetailActivity extends AppCompatActivity implements ExoPlayer.E
 
         mItemPosition = getIntent().getIntExtra(ARG_ITEM_POSITION, 0);
 
-        Step mItem = mRecipe.getSteps().get(mItemPosition);
 
-        // savedInstanceState is non-null when there is fragment state
-        // saved from previous configurations of this activity
-        // (e.g. when rotating the screen from portrait to landscape).
-        // In this case, the fragment will automatically be re-added
-        // to its container so we don't need to manually add it.
-        // For more information, see the Fragments API guide at:
-        //
-        // http://developer.android.com/guide/components/fragments.html
-        //
-        if (savedInstanceState == null && findViewById(R.id.item_detail_container) != null) {
+        if (findViewById(R.id.item_detail_container) != null) {
             // Create the detail fragment and add it to the activity
             // using a fragment transaction.
             Bundle arguments = new Bundle();
-            arguments.putSerializable(ItemDetailFragment.ARG_ITEM, mItem);
+            arguments.putSerializable(ItemDetailFragment.ARG_ITEM, mRecipe.getSteps().get(mItemPosition));
+            arguments.putSerializable(ARG_RECIPE, mRecipe);
+            if (mItemPosition > 0) {
+                arguments.putInt(ItemDetailFragment.ARG_ITEM_POSITION_PREVIOUS, mItemPosition - 1);
+            }
+            if (mItemPosition < mRecipe.getSteps().size() - 1) {
+                arguments.putInt(ItemDetailFragment.ARG_ITEM_POSITION_NEXT, mItemPosition + 1);
+            }
             ItemDetailFragment fragment = new ItemDetailFragment();
             fragment.setArguments(arguments);
             getSupportFragmentManager().beginTransaction()
@@ -94,50 +62,7 @@ public class ItemDetailActivity extends AppCompatActivity implements ExoPlayer.E
 
 
         if (getResources().getBoolean(R.bool.is_landscape)) {
-
             Objects.requireNonNull(getSupportActionBar()).hide();
-
-            // Initialize the player view.
-            mPlayerView = findViewById(R.id.playerView);
-
-            if (mItem.getVideoURL() != null && !mItem.getVideoURL().isEmpty()) {
-                if (mPlayerView != null) {
-                    // Initialize the Media Session.
-                    initializeMediaSession();
-                }
-
-                // Initialize the player.
-                initializePlayer(Uri.parse(mItem.getVideoURL()));
-            } else {
-                View videoNotFound = findViewById(R.id.iv_video_not_found);
-                mPlayerView.setVisibility(View.GONE);
-                videoNotFound.setVisibility(View.VISIBLE);
-                Toast.makeText(this, getString(R.string.video_not_found_error),
-                        Toast.LENGTH_SHORT).show();
-            }
-        } else {
-
-            if (mItemPosition == 0) {
-                findViewById(R.id.bt_previous).setVisibility(View.INVISIBLE);
-            } else {
-                findViewById(R.id.bt_previous).setOnClickListener(listener -> {
-                    Intent intent = new Intent(this, ItemDetailActivity.class);
-                    intent.putExtra(ARG_ITEM_POSITION, mItemPosition - 1);
-                    intent.putExtra(ARG_RECIPE, mRecipe);
-                    this.startActivity(intent);
-                });
-            }
-            if (mItemPosition == mRecipe.getSteps().size() - 1) {
-                findViewById(R.id.bt_next).setVisibility(View.INVISIBLE);
-            } else {
-                findViewById(R.id.bt_next).setOnClickListener(listener -> {
-                    Intent intent = new Intent(this, ItemDetailActivity.class);
-                    intent.putExtra(ARG_ITEM_POSITION, mItemPosition + 1);
-                    intent.putExtra(ARG_RECIPE, mRecipe);
-                    this.startActivity(intent);
-                });
-            }
-
         }
     }
 
@@ -160,155 +85,11 @@ public class ItemDetailActivity extends AppCompatActivity implements ExoPlayer.E
         return super.onOptionsItemSelected(item);
     }
 
-
-    /**
-     * Initializes the Media Session to be enabled with media buttons, transport controls, callbacks
-     * and media controller.
-     */
-    private void initializeMediaSession() {
-
-        // Create a MediaSessionCompat.
-        mMediaSession = new MediaSessionCompat(this, LOG_TAG);
-
-        // Enable callbacks from MediaButtons and TransportControls.
-        mMediaSession.setFlags(
-                MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS |
-                        MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS);
-
-        // Do not let MediaButtons restart the player when the app is not visible.
-        mMediaSession.setMediaButtonReceiver(null);
-
-        // Set an initial PlaybackState with ACTION_PLAY, so media buttons can start the player.
-        mStateBuilder = new PlaybackStateCompat.Builder()
-                .setActions(
-                        PlaybackStateCompat.ACTION_PLAY |
-                                PlaybackStateCompat.ACTION_PAUSE |
-                                PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS |
-                                PlaybackStateCompat.ACTION_PLAY_PAUSE);
-
-        mMediaSession.setPlaybackState(mStateBuilder.build());
-
-
-        // MySessionCallback has methods that handle callbacks from a media controller.
-        mMediaSession.setCallback(new MySessionCallback());
-
-        // Start the Media Session since the activity is active.
-        mMediaSession.setActive(true);
-
-    }
-
-    /**
-     * Initialize ExoPlayer.
-     *
-     * @param mediaUri The URI of the sample to play.
-     */
-    private void initializePlayer(Uri mediaUri) {
-        if (mExoPlayer == null) {
-            // Create an instance of the ExoPlayer.
-            TrackSelector trackSelector = new DefaultTrackSelector();
-            LoadControl loadControl = new DefaultLoadControl();
-            mExoPlayer = ExoPlayerFactory.newSimpleInstance(this, trackSelector, loadControl);
-            mPlayerView.setPlayer(mExoPlayer);
-
-            // Set the ExoPlayer.EventListener to this activity.
-            mExoPlayer.addListener(this);
-
-            // Prepare the MediaSource.
-            String userAgent = Util.getUserAgent(this, "ClassicalMusicQuiz");
-            MediaSource mediaSource = new ExtractorMediaSource(mediaUri, new DefaultDataSourceFactory(
-                    this, userAgent), new DefaultExtractorsFactory(), null, null);
-            mExoPlayer.prepare(mediaSource);
-            mExoPlayer.setPlayWhenReady(true);
-        }
-    }
-
-
-    /**
-     * Release ExoPlayer.
-     */
-    private void releasePlayer() {
-        if (mExoPlayer != null) {
-            mExoPlayer.stop();
-            mExoPlayer.release();
-            mExoPlayer = null;
-        }
-    }
-
-
     /**
      * Release the player when the activity is destroyed.
      */
     @Override
     public void onDestroy() {
         super.onDestroy();
-        releasePlayer();
-        if (mMediaSession != null) mMediaSession.setActive(false);
     }
-
-
-    // ExoPlayer Event Listeners
-
-
-    @Override
-    public void onTimelineChanged(Timeline timeline, @Nullable Object manifest, int reason) {
-
-    }
-
-    @Override
-    public void onTracksChanged(TrackGroupArray trackGroups, TrackSelectionArray trackSelections) {
-    }
-
-    @Override
-    public void onLoadingChanged(boolean isLoading) {
-    }
-
-
-    /**
-     * Method that is called when the ExoPlayer state changes. Used to update the MediaSession
-     * PlayBackState to keep in sync.
-     *
-     * @param playWhenReady true if ExoPlayer is playing, false if it's paused.
-     * @param playbackState int describing the state of ExoPlayer. Can be STATE_READY, STATE_IDLE,
-     *                      STATE_BUFFERING, or STATE_ENDED.
-     */
-    @Override
-    public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
-        if ((playbackState == ExoPlayer.STATE_READY) && playWhenReady) {
-            mStateBuilder.setState(PlaybackStateCompat.STATE_PLAYING,
-                    mExoPlayer.getCurrentPosition(), 1f);
-        } else if ((playbackState == ExoPlayer.STATE_READY)) {
-            mStateBuilder.setState(PlaybackStateCompat.STATE_PAUSED,
-                    mExoPlayer.getCurrentPosition(), 1f);
-        }
-        mMediaSession.setPlaybackState(mStateBuilder.build());
-    }
-
-    @Override
-    public void onPlayerError(ExoPlaybackException error) {
-    }
-
-    @Override
-    public void onPositionDiscontinuity(int reason) {
-    }
-
-    /**
-     * Media Session Callbacks, where all external clients control the player.
-     */
-    private class MySessionCallback extends MediaSessionCompat.Callback {
-        @Override
-        public void onPlay() {
-            mExoPlayer.setPlayWhenReady(true);
-        }
-
-        @Override
-        public void onPause() {
-            mExoPlayer.setPlayWhenReady(false);
-        }
-
-        @Override
-        public void onSkipToPrevious() {
-            mExoPlayer.seekTo(0);
-        }
-    }
-
 }
