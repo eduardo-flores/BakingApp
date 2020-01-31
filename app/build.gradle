@@ -41,7 +41,8 @@ dependencies {
 
     implementation 'com.google.android.exoplayer:exoplayer:2.9.6'
 
-
     implementation 'androidx.lifecycle:lifecycle-common:2.2.0'
     implementation 'androidx.lifecycle:lifecycle-extensions:2.2.0'
+
+    implementation 'com.squareup.picasso:picasso:2.71828'
 }

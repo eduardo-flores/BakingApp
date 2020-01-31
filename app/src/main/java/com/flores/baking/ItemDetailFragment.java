@@ -5,12 +5,13 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -33,6 +34,7 @@ import com.google.android.exoplayer2.trackselection.TrackSelector;
 import com.google.android.exoplayer2.ui.SimpleExoPlayerView;
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
 import com.google.android.exoplayer2.util.Util;
+import com.squareup.picasso.Picasso;
 
 import static com.flores.baking.ItemDetailActivity.ARG_ITEM_POSITION;
 import static com.flores.baking.ItemListActivity.ARG_RECIPE;
@@ -124,18 +126,24 @@ public class ItemDetailFragment extends Fragment implements ExoPlayer.EventListe
             // Initialize the player view.
             mPlayerView = rootView.findViewById(R.id.playerView);
 
-            if (mItem.getVideoURL() != null && !mItem.getVideoURL().isEmpty()) {
+            if (!TextUtils.isEmpty(mItem.getVideoURL())) {
                 // Initialize the Media Session.
                 initializeMediaSession();
 
                 // Initialize the player.
                 initializePlayer(Uri.parse(mItem.getVideoURL()));
             } else {
-                View videoNotFound = rootView.findViewById(R.id.iv_video_not_found);
+                ImageView videoNotFound = rootView.findViewById(R.id.iv_video_not_found);
                 mPlayerView.setVisibility(View.GONE);
                 videoNotFound.setVisibility(View.VISIBLE);
-                Toast.makeText(requireContext(), getString(R.string.video_not_found_error),
-                        Toast.LENGTH_SHORT).show();
+
+                // Load Thumbnail image if it exists
+                if (!TextUtils.isEmpty(mItem.getThumbnailURL())) {
+                    Picasso.get()
+                            .load(mItem.getThumbnailURL())
+                            .placeholder(R.drawable.ic_video_not_found)
+                            .into(videoNotFound);
+                }
             }
         }
 
