@@ -13,26 +13,27 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.flores.baking.data.model.Step;
+import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.DefaultLoadControl;
 import com.google.android.exoplayer2.ExoPlaybackException;
-import com.google.android.exoplayer2.ExoPlayer;
 import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.LoadControl;
+import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.Timeline;
-import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory;
 import com.google.android.exoplayer2.source.ExtractorMediaSource;
 import com.google.android.exoplayer2.source.MediaSource;
 import com.google.android.exoplayer2.source.TrackGroupArray;
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
 import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
 import com.google.android.exoplayer2.trackselection.TrackSelector;
-import com.google.android.exoplayer2.ui.SimpleExoPlayerView;
-import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
+import com.google.android.exoplayer2.ui.PlayerView;
+import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory;
 import com.google.android.exoplayer2.util.Util;
 import com.squareup.picasso.Picasso;
 
@@ -45,7 +46,7 @@ import static com.flores.baking.ItemListActivity.ARG_RECIPE;
  * in two-pane mode (on tablets) or a {@link ItemDetailActivity}
  * on handsets.
  */
-public class ItemDetailFragment extends Fragment implements ExoPlayer.EventListener {
+public class ItemDetailFragment extends Fragment implements Player.EventListener {
 
     static final String ARG_ITEM_POSITION_PREVIOUS = "previous_item_position";
 
@@ -57,10 +58,16 @@ public class ItemDetailFragment extends Fragment implements ExoPlayer.EventListe
     static final String ARG_ITEM_POSITION_NEXT = "next_item_position";
     private static final String LOG_TAG = ItemDetailFragment.class.getSimpleName();
 
+    private static final String PLAYER_CURRENT_POSITION = "ItemDetailFragment.current_position";
+    private static final String PLAYER_IS_PLAYING = "ItemDetailFragment.is_playing";
+    private static MediaSessionCompat mMediaSession;
+    private long mCurrentPosition = C.POSITION_UNSET;
     private SimpleExoPlayer mExoPlayer;
-    private SimpleExoPlayerView mPlayerView;
-    private MediaSessionCompat mMediaSession;
+    private boolean mIsPlaying = true;
+    private PlayerView mPlayerView;
     private PlaybackStateCompat.Builder mStateBuilder;
+    private ImageView mImageVideoNotFound;
+
     private Step mItem;
 
     /**
@@ -77,6 +84,11 @@ public class ItemDetailFragment extends Fragment implements ExoPlayer.EventListe
         assert getArguments() != null;
         if (getArguments().containsKey(ARG_ITEM)) {
             mItem = (Step) getArguments().getSerializable(ARG_ITEM);
+        }
+
+        if (savedInstanceState != null) {
+            mCurrentPosition = savedInstanceState.getLong(PLAYER_CURRENT_POSITION);
+            mIsPlaying = savedInstanceState.getBoolean(PLAYER_IS_PLAYING);
         }
     }
 
@@ -122,30 +134,12 @@ public class ItemDetailFragment extends Fragment implements ExoPlayer.EventListe
         if (mItem != null) {
             TextView itemDetail = rootView.findViewById(R.id.item_detail);
             if (itemDetail != null) itemDetail.setText(mItem.getDescription());
-
-            // Initialize the player view.
-            mPlayerView = rootView.findViewById(R.id.playerView);
-
-            if (!TextUtils.isEmpty(mItem.getVideoURL())) {
-                // Initialize the Media Session.
-                initializeMediaSession();
-
-                // Initialize the player.
-                initializePlayer(Uri.parse(mItem.getVideoURL()));
-            } else {
-                ImageView videoNotFound = rootView.findViewById(R.id.iv_video_not_found);
-                mPlayerView.setVisibility(View.GONE);
-                videoNotFound.setVisibility(View.VISIBLE);
-
-                // Load Thumbnail image if it exists
-                if (!TextUtils.isEmpty(mItem.getThumbnailURL())) {
-                    Picasso.get()
-                            .load(mItem.getThumbnailURL())
-                            .placeholder(R.drawable.ic_video_not_found)
-                            .into(videoNotFound);
-                }
-            }
         }
+
+        // Initialize the player view.
+        mPlayerView = rootView.findViewById(R.id.playerView);
+
+        mImageVideoNotFound = rootView.findViewById(R.id.iv_video_not_found);
 
         return rootView;
 
@@ -198,17 +192,24 @@ public class ItemDetailFragment extends Fragment implements ExoPlayer.EventListe
             TrackSelector trackSelector = new DefaultTrackSelector();
             LoadControl loadControl = new DefaultLoadControl();
             mExoPlayer = ExoPlayerFactory.newSimpleInstance(requireContext(), trackSelector, loadControl);
+
             mPlayerView.setPlayer(mExoPlayer);
 
             // Set the ExoPlayer.EventListener to this activity.
             mExoPlayer.addListener(this);
 
             // Prepare the MediaSource.
-            String userAgent = Util.getUserAgent(requireContext(), "ClassicalMusicQuiz");
-            MediaSource mediaSource = new ExtractorMediaSource(mediaUri, new DefaultDataSourceFactory(
-                    requireContext(), userAgent), new DefaultExtractorsFactory(), null, null);
+            String userAgent = Util.getUserAgent(requireContext(), "BakingApp");
+            MediaSource mediaSource = new ExtractorMediaSource.Factory(
+                    new DefaultHttpDataSourceFactory(userAgent))
+                    .createMediaSource(mediaUri);
             mExoPlayer.prepare(mediaSource);
-            mExoPlayer.setPlayWhenReady(true);
+
+            if (mCurrentPosition != C.POSITION_UNSET) {
+                mExoPlayer.seekTo(mCurrentPosition);
+            }
+
+            mExoPlayer.setPlayWhenReady(mIsPlaying);
         }
     }
 
@@ -224,6 +225,32 @@ public class ItemDetailFragment extends Fragment implements ExoPlayer.EventListe
         if (mMediaSession != null) mMediaSession.setActive(false);
     }
 
+    @Override
+    public void onStart() {
+        super.onStart();
+
+
+        if (!TextUtils.isEmpty(mItem.getVideoURL())) {
+            // Initialize the Media Session.
+            initializeMediaSession();
+
+            // Initialize the player.
+            initializePlayer(Uri.parse(mItem.getVideoURL()));
+        } else {
+            mPlayerView.setVisibility(View.GONE);
+            mImageVideoNotFound.setVisibility(View.VISIBLE);
+
+            // Load Thumbnail image if it exists
+            if (!TextUtils.isEmpty(mItem.getThumbnailURL())) {
+                Picasso.get()
+                        .load(mItem.getThumbnailURL())
+                        .placeholder(R.drawable.ic_video_not_found)
+                        .into(mImageVideoNotFound);
+            }
+        }
+
+    }
+
     /**
      * Release the player when the activity is destroyed.
      */
@@ -231,6 +258,25 @@ public class ItemDetailFragment extends Fragment implements ExoPlayer.EventListe
     public void onDestroy() {
         super.onDestroy();
         releasePlayer();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+
+        if (mExoPlayer != null) {
+            mCurrentPosition = mExoPlayer.getCurrentPosition();
+            mIsPlaying = mExoPlayer.getPlayWhenReady();
+        }
+
+        releasePlayer();
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putLong(PLAYER_CURRENT_POSITION, mCurrentPosition);
+        outState.putBoolean(PLAYER_IS_PLAYING, mIsPlaying);
     }
 
     // ExoPlayer Event Listeners
@@ -259,10 +305,10 @@ public class ItemDetailFragment extends Fragment implements ExoPlayer.EventListe
      */
     @Override
     public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
-        if ((playbackState == ExoPlayer.STATE_READY) && playWhenReady) {
+        if ((playbackState == Player.STATE_READY) && playWhenReady) {
             mStateBuilder.setState(PlaybackStateCompat.STATE_PLAYING,
                     mExoPlayer.getCurrentPosition(), 1f);
-        } else if ((playbackState == ExoPlayer.STATE_READY)) {
+        } else if ((playbackState == Player.STATE_READY)) {
             mStateBuilder.setState(PlaybackStateCompat.STATE_PAUSED,
                     mExoPlayer.getCurrentPosition(), 1f);
         }
