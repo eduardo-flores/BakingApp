@@ -13,6 +13,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.RecyclerView;
@@ -20,6 +21,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.flores.baking.data.RecipeRepository;
 import com.flores.baking.data.model.Recipe;
 import com.flores.baking.data.webservice.RecipeNetworkDataSource;
+import com.flores.baking.idlingResource.SimpleIdlingResource;
 import com.flores.baking.viewmodel.MainActivityViewModel;
 import com.flores.baking.viewmodel.MainViewModelFactory;
 import com.squareup.picasso.Picasso;
@@ -38,6 +40,11 @@ public class MainActivity extends AppCompatActivity {
     private ProgressBar mLoadingIndicator;
     private RecyclerView mRecyclerView;
 
+
+    // The Idling Resource which will be null in production.
+    @Nullable
+    private SimpleIdlingResource mIdlingResource;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -53,9 +60,12 @@ public class MainActivity extends AppCompatActivity {
         MainViewModelFactory factory = new MainViewModelFactory(RecipeRepository.getInstance(RecipeNetworkDataSource.getInstance(getApplicationContext())));
         MainActivityViewModel mViewModel = ViewModelProviders.of(this, factory).get(MainActivityViewModel.class);
 
+        getIdlingResource().setIdleState(false);
+
         mViewModel.getRecipes().observe(this, recipes -> {
             mRecipes = recipes;
             showData();
+            getIdlingResource().setIdleState(true);
         });
     }
 
@@ -140,5 +150,13 @@ public class MainActivity extends AppCompatActivity {
                 mImageView = view.findViewById(R.id.iv_place_holder);
             }
         }
+    }
+
+    @NonNull
+    public SimpleIdlingResource getIdlingResource() {
+        if (mIdlingResource == null) {
+            mIdlingResource = new SimpleIdlingResource();
+        }
+        return mIdlingResource;
     }
 }
