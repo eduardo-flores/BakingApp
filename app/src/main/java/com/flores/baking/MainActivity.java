@@ -3,10 +3,12 @@ package com.flores.baking;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -20,6 +22,7 @@ import com.flores.baking.data.model.Recipe;
 import com.flores.baking.data.webservice.RecipeNetworkDataSource;
 import com.flores.baking.viewmodel.MainActivityViewModel;
 import com.flores.baking.viewmodel.MainViewModelFactory;
+import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -111,6 +114,13 @@ public class MainActivity extends AppCompatActivity {
         public void onBindViewHolder(final SimpleItemRecyclerViewAdapter.ViewHolder holder, int position) {
             holder.mContentView.setText(mValues.get(position).getName());
 
+            // Load image if it exists
+            if (!TextUtils.isEmpty(mValues.get(position).getImage())) {
+                Picasso.get()
+                        .load(mValues.get(position).getImage())
+                        .placeholder(R.drawable.ic_book)
+                        .into(holder.mImageView);
+            }
             holder.itemView.setTag(mValues.get(position));
             holder.itemView.setOnClickListener(mOnClickListener);
         }
@@ -122,10 +132,12 @@ public class MainActivity extends AppCompatActivity {
 
         class ViewHolder extends RecyclerView.ViewHolder {
             final TextView mContentView;
+            final ImageView mImageView;
 
             ViewHolder(View view) {
                 super(view);
                 mContentView = view.findViewById(R.id.recipe_name);
+                mImageView = view.findViewById(R.id.iv_place_holder);
             }
         }
     }

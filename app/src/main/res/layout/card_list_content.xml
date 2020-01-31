@@ -13,25 +13,27 @@
 
         <androidx.appcompat.widget.AppCompatImageView
             android:id="@+id/iv_place_holder"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="@dimen/text_margin"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:padding="@dimen/text_margin_large"
             android:src="@drawable/ic_book"
             android:textAppearance="?attr/textAppearanceListItem"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/recipe_name"
             tools:text="Recipe Name" />
 
         <TextView
             android:id="@+id/recipe_name"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_margin="@dimen/text_margin"
             android:textAppearance="?attr/textAppearanceListItem"
             app:layout_constraintBottom_toBottomOf="@id/iv_place_holder"
             app:layout_constraintStart_toEndOf="@id/iv_place_holder"
             app:layout_constraintTop_toTopOf="@id/iv_place_holder"
+            app:layout_constraintEnd_toEndOf="parent"
             tools:text="Recipe Name" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </com.google.android.material.card.MaterialCardView>
